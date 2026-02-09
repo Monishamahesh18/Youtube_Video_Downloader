@@ -1,5 +1,16 @@
 let downloadInProgress = false;
 
+// Wake up Railway immediately when page loads
+if (typeof fetch !== 'undefined') {
+    // Ping health endpoint to wake up Railway
+    fetch('/health').catch(() => {});
+    
+    // Keep Railway awake - ping every 4 minutes
+    setInterval(() => {
+        fetch('/health').catch(() => {});
+    }, 240000); // 4 minutes
+}
+
 // Handle paste event with debounce
 let infoTimeout;
 document.getElementById('youtubeUrl').addEventListener('paste', function(e) {

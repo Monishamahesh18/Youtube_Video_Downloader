@@ -3,8 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>YouTube Video Downloader</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Preconnect for faster loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <!-- Inline critical CSS for instant render -->
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}.container{width:100%;max-width:600px}.card{background:#fff;border-radius:20px;padding:40px;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:slideUp .3s ease-out}@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}h1{color:#333;text-align:center;margin-bottom:10px;font-size:2.5em}.subtitle{text-align:center;color:#666;margin-bottom:30px;font-size:1.1em}.input-group{display:flex;gap:10px;margin-bottom:20px}#youtubeUrl{flex:1;padding:15px 20px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;transition:all .3s ease;outline:none}#youtubeUrl:focus{border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,.1)}#downloadBtn{padding:15px 30px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;transition:all .3s ease;display:flex;align-items:center;gap:10px;min-width:140px;justify-content:center}#downloadBtn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 5px 20px rgba(102,126,234,.4)}#downloadBtn:disabled{opacity:.7;cursor:not-allowed}.loader{width:20px;height:20px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.video-info{margin-top:20px;padding:20px;background:#f8f9fa;border-radius:10px;animation:fadeIn .3s ease-out}@keyframes fadeIn{from{opacity:0}to{opacity:1}}.info-content{display:flex;gap:15px;align-items:center}.info-content img{width:120px;height:90px;object-fit:cover;border-radius:8px}.info-text h3{color:#333;margin-bottom:5px;font-size:1.1em}.info-text p{color:#666;font-size:.9em}.error-message,.success-message{margin-top:20px;padding:15px;border-radius:10px;animation:fadeIn .3s ease-out}.error-message{background:#fee;color:#c33;border-left:4px solid #c33}.success-message{background:#efe;color:#3c3;border-left:4px solid #3c3}@media (max-width:600px){.card{padding:30px 20px}h1{font-size:2em}.input-group{flex-direction:column}#downloadBtn{width:100%}.info-content{flex-direction:column;text-align:center}.info-content img{width:100%;height:auto}}
+    </style>
+    <!-- Load full CSS asynchronously -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></noscript>
 </head>
 <body>
     <div class="container">
@@ -27,7 +36,7 @@
             
             <div id="videoInfo" class="video-info" style="display: none;">
                 <div class="info-content">
-                    <img id="thumbnail" src="" alt="Video thumbnail">
+                    <img id="thumbnail" src="" alt="Video thumbnail" loading="lazy">
                     <div class="info-text">
                         <h3 id="videoTitle"></h3>
                         <p id="videoDuration"></p>
@@ -40,6 +49,16 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <!-- Load script asynchronously -->
+    <script>
+        // Wake up Railway immediately on page load
+        fetch('/health').catch(() => {});
+        
+        // Keep Railway awake - ping every 4 minutes
+        setInterval(() => {
+            fetch('/health').catch(() => {});
+        }, 240000);
+    </script>
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
 </body>
 </html>

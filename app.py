@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, send_file, Response
+from flask import Flask, render_template, request, jsonify, send_file, Response, make_response
 import os
 import yt_dlp
 import uuid
@@ -56,12 +56,22 @@ def timeout_handler(signum, frame):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    """Main page - optimized for fast loading"""
+    response = make_response(render_template('index.html'))
+    # Cache headers for faster subsequent loads
+    response.headers['Cache-Control'] = 'public, max-age=300'  # 5 minutes
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 @app.route('/health')
 def health():
-    """Health check endpoint for Railway"""
+    """Health check endpoint for Railway - keeps app awake"""
     return jsonify({'status': 'ok', 'service': 'youtube-downloader'}), 200
+
+@app.route('/ping')
+def ping():
+    """Simple ping endpoint for keep-alive"""
+    return 'pong', 200
 
 @app.route('/download', methods=['POST'])
 def download():
@@ -287,9 +297,32 @@ def get_info():
     except Exception as e:
         return jsonify({'error': str(e)[:200]}), 500
 
+# Keep-alive mechanism - ping health endpoint periodically
+def start_keep_alive():
+    """Background thread to keep Railway awake"""
+    def ping():
+        while True:
+            try:
+                time.sleep(240)  # 4 minutes
+                # Simple HTTP request to health endpoint
+                import urllib.request
+                try:
+                    port = int(os.environ.get('PORT', 5000))
+                    urllib.request.urlopen(f'http://127.0.0.1:{port}/health', timeout=2)
+                except:
+                    pass
+            except:
+                pass
+    thread = threading.Thread(target=ping, daemon=True)
+    thread.start()
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    
+    # Start keep-alive in production
+    if not debug:
+        start_keep_alive()
     
     # Use production WSGI server if available
     # Railway will use gunicorn from Procfile, so this is for local/dev
