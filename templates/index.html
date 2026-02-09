@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Downloader</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🎬 YouTube Video Downloader</h1>
+            <p class="subtitle">Download YouTube videos with audio in high quality</p>
+            
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    id="youtubeUrl" 
+                    placeholder="Paste YouTube URL here..."
+                    autocomplete="off"
+                >
+                <button id="downloadBtn" onclick="handleDownload()">
+                    <span id="btnText">Download</span>
+                    <span id="btnLoader" class="loader" style="display: none;"></span>
+                </button>
+            </div>
+            
+            <div id="videoInfo" class="video-info" style="display: none;">
+                <div class="info-content">
+                    <img id="thumbnail" src="" alt="Video thumbnail">
+                    <div class="info-text">
+                        <h3 id="videoTitle"></h3>
+                        <p id="videoDuration"></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+            <div id="successMessage" class="success-message" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
