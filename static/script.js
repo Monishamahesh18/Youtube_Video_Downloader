@@ -1,13 +1,15 @@
 let downloadInProgress = false;
 
-// Handle paste event
+// Handle paste event with debounce
+let infoTimeout;
 document.getElementById('youtubeUrl').addEventListener('paste', function(e) {
-    setTimeout(() => {
+    clearTimeout(infoTimeout);
+    infoTimeout = setTimeout(() => {
         const url = this.value.trim();
         if (url && (url.includes('youtube.com') || url.includes('youtu.be'))) {
             getVideoInfo(url);
         }
-    }, 100);
+    }, 300);
 });
 
 // Handle Enter key
@@ -17,26 +19,36 @@ document.getElementById('youtubeUrl').addEventListener('keypress', function(e) {
     }
 });
 
-// Handle input change
+// Handle input change with debounce
+let inputTimeout;
 document.getElementById('youtubeUrl').addEventListener('input', function() {
-    const url = this.value.trim();
-    if (url && (url.includes('youtube.com') || url.includes('youtu.be'))) {
-        getVideoInfo(url);
-    } else {
-        hideVideoInfo();
-        hideMessages();
-    }
+    clearTimeout(inputTimeout);
+    inputTimeout = setTimeout(() => {
+        const url = this.value.trim();
+        if (url && (url.includes('youtube.com') || url.includes('youtu.be'))) {
+            getVideoInfo(url);
+        } else {
+            hideVideoInfo();
+            hideMessages();
+        }
+    }, 500);
 });
 
 async function getVideoInfo(url) {
     try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+        
         const response = await fetch('/info', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ url: url })
+            body: JSON.stringify({ url: url }),
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
 
         if (response.ok) {
             const data = await response.json();
@@ -45,7 +57,9 @@ async function getVideoInfo(url) {
             hideVideoInfo();
         }
     } catch (error) {
-        console.error('Error fetching video info:', error);
+        if (error.name !== 'AbortError') {
+            console.error('Error fetching video info:', error);
+        }
         hideVideoInfo();
     }
 }
@@ -117,13 +131,20 @@ async function handleDownload() {
     hideMessages();
 
     try {
+        // Add timeout for mobile browsers (5 minutes)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutes
+        
         const response = await fetch('/download', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ url: url })
+            body: JSON.stringify({ url: url }),
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
 
         if (response.ok) {
             // Get filename from Content-Disposition header or use default
@@ -155,7 +176,11 @@ async function handleDownload() {
             showError(errorMessage);
         }
     } catch (error) {
-        showError('An error occurred. Please check your connection and try again.');
+        if (error.name === 'AbortError') {
+            showError('Download timeout. The video might be too large. Please try again or use a shorter video.');
+        } else {
+            showError('An error occurred. Please check your connection and try again.');
+        }
         console.error('Download error:', error);
     } finally {
         downloadInProgress = false;
